@@ -1,6 +1,9 @@
 'use strict'
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const https = require('https')
+const url = require('url')
+const path = require('path')
 
 const sendFields = 'username email' // separate with space
 const limitItems = 10
@@ -12,7 +15,35 @@ exports.postUsers = function (request, response) {
     email: request.body.email
   })
 
+  var pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
+  let m2x = new Promise(function (resolve, reject) {
+    let options = {
+      hostname: pathname.hostname,
+      path: path.resolve(pathname.path, `../../kid-${user.id}`),
+      method: 'PUT',
+      headers: {
+        'X-M2X-KEY': process.env.X_M2X_KEY,
+        'Content-Type': 'application/json'
+      }
+    }
+    let body = JSON.stringify({'type': 'numeric'})
+    console.log(options, body)
+    let data
+    let req = https.request(options, function (res) {
+      res.on('data', function (chunk) {
+        if (data) { return (data = Buffer.concat([data, chunk])) }
+        data = chunk
+      })
+      res.on('end', () => resolve(JSON.parse(data.toString('utf-8'))))
+    })
+    req.on('error', reject)
+    req.write(body)
+    req.end()
+  })
+
   user.save()
+    .then(() => m2x)
+    .then((res) => console.log(res))
     .then(() => {
       // @TODO add async generate jwt
       let token = jwt.sign({reference: user._id}, process.env.JWT_SIGNATURE)
