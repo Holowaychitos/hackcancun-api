@@ -30,6 +30,7 @@ function runServer () {
   })
 
   io.on('connection', (socket) => {
+    console.log('socket connected')
     socket.on('jump', (data) => {
       console.log(data)
       io.emit('jump', data)
