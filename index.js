@@ -35,6 +35,10 @@ function runServer () {
       console.log(data)
       io.emit('jump', data)
     })
+    socket.on('hey', (data) => {
+      console.log('hey', data)
+    })
+
     socket.on('disconnect', () => console.log(`socket ${socket.id} disconnected`))
 
     socket.on('error', (error) => console.log(`socket ${socket.id} error: ${error.message}`))
