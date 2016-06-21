@@ -7,11 +7,15 @@ const passport = require('passport')
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const cors = require('cors') // @TODO: remove dependecie for production
+const http = require('http')
+const socketIO = require('socket.io')
 
 const routes = require('./routes')
 
 function runServer () {
   let app = express()
+  let server = http.Server(app)
+  let io = socketIO(server)
 
   app.use(bodyParser.json()) // for parsing application/json
   app.use(bodyParser.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
@@ -20,8 +24,16 @@ function runServer () {
   app.use(cors())
 
   app.use(`/api/${process.env.VERSION_API}`, routes)
-  app.listen(process.env.PORT, function () {
-    console.log(`server running on: \n └─> http://localhost:${process.env.PORT}`)
+  server.listen(process.env.PORT, function () {
+    console.log(`server running on:
+ └─> http://localhost:${process.env.PORT}`)
+  })
+
+  io.on('connection', (socket) => {
+    socket.on('jump', (data) => {
+      console.log(data)
+      io.emit('jump', data)
+    })
   })
 
   return app
