@@ -30,11 +30,16 @@ function runServer () {
   })
 
   io.on('connection', (socket) => {
-    console.log('socket connected')
+    console.log(`socket ${socket.id} connected`)
     socket.on('jump', (data) => {
       console.log(data)
       io.emit('jump', data)
     })
+    socket.on('disconnect', () => console.log(`socket ${socket.id} disconnected`))
+
+    socket.on('error', (error) => console.log(`socket ${socket.id} error: ${error.message}`))
+
+    socket.on('reconnect', () => console.log(`socket ${socket.id} recconected`))
   })
 
   return app
