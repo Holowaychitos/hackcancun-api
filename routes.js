@@ -28,4 +28,10 @@ router.route('/auth/forgot')
 router.route('/data')
   .post(authController.isAuthenticated, dataController.postData)
 
+router.route('/data/last-week')
+  .get(authController.isAuthenticated, dataController.getLastWeek)
+
+router.route('/data/fake-data')
+  .get(authController.isAuthenticated, dataController.putFakeData)
+
 module.exports = router
