@@ -15,7 +15,7 @@ exports.postUsers = function (request, response) {
     email: request.body.email
   })
 
-  var pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
+  let pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
   let m2x = new Promise(function (resolve, reject) {
     let options = {
       hostname: pathname.hostname,
@@ -100,4 +100,11 @@ exports.updateUser = function (request, response) {
     .catch((error) => response.status(400).json({error: error}))
 }
 
-exports.getRank = function (request, response) {}
+exports.getRank = function (request, response) {
+  let date = new Date(Date.now() - 1000 * 7 * 24 * 60 * 60)
+  let mejores = User.find({lastWeekSum: {$gte: request.user.lastWeekSum}, _id: {$ne: request.user._id}, updatedAt: {$gte: date}}).select('thisWeekSum lastWeekSum avatar username').limit(5).sort('-lastWeekSum')
+  let peores = User.find({lastWeekSum: {$lte: request.user.lastWeekSum}, _id: {$ne: request.user._id}, updatedAt: {$gte: date}}).select('thisWeekSum lastWeekSum avatar username').limit(5).sort('-lastWeekSum')
+  let user = request.user.toObject()
+  delete user.password
+  let res = Promise.all([mejores, peores]).then((data) => response.json([...data[0], user, ...data[1]]))
+}

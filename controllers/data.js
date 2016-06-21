@@ -135,8 +135,7 @@ exports.putFakeData = function (request, response) {
   date.setDate(date.getDate() - date.getDay() - 7)
   date.setHours(0, (Math.random() * 60) | 0, (Math.random() * 60) | 0, 0)
   let inicio = new Date(date)
-  let fin = new Date(date)
-  fin.setDate(fin.getDate() + 6)
+  let fin = new Date()
   // curl -i -X PUT https://api-m2x.att.com/v2/devices/185321322901cff675347d54ffb37f59/streams/average-steps/value -H "X-M2X-KEY: 13ef514ad4d0fa5ed0c90180f607e251" -H "Content-Type: application/json" -d "{ \"value\": \"40\" }"
   let pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
   let body = {values: []}

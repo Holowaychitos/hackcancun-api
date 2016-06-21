@@ -34,4 +34,7 @@ router.route('/data/last-week')
 router.route('/data/fake-data')
   .get(authController.isAuthenticated, dataController.putFakeData)
 
+router.route('/user/rank')
+  .get(authController.isAuthenticated, userController.getRank)
+
 module.exports = router
