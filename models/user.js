@@ -21,9 +21,13 @@ const UserSchema = new mongoose.Schema({
       validator: is.email
     }
   },
+  thisWeekSum: Number,
+  lastWeekSum: Number,
   location: String,
   avatar: String,
   bio: String
+}, {
+  timestamps: true
 })
 
 UserSchema.index({ email: 1, username: 1 }, { unique: true })

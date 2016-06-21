@@ -83,11 +83,11 @@ exports.getLastWeek = function (request, response) {
   date.setDate(date.getDate() - date.getDay() - 7)
   date.setHours(0, 0, 0, 0)
   let fin = new Date(date)
-  fin.setDate(fin.getDate() + 7)
+  fin.setDate(fin.getDate() + 6)
   // curl -i -X PUT https://api-m2x.att.com/v2/devices/185321322901cff675347d54ffb37f59/streams/average-steps/value -H "X-M2X-KEY: 13ef514ad4d0fa5ed0c90180f607e251" -H "Content-Type: application/json" -d "{ \"value\": \"40\" }"
   let pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
   let m2x = new Promise(function (resolve, reject) {
-    let query = querystring.stringify({start: date.toISOString(), end: fin.toISOString(), type: 'sum', interval: 60 * 60 * 24})
+    let query = querystring.stringify({start: date.toISOString(), end: (new Date()).toISOString(), type: 'sum', interval: 60 * 60 * 24})
     let options = {
       hostname: pathname.hostname,
       path: `${path.resolve(pathname.path, `../../kid-${request.user.id}/sampling`)}?${query}`,
@@ -109,9 +109,25 @@ exports.getLastWeek = function (request, response) {
   })
   m2x.then((res) => {
     console.log(res)
-    response.json(res)
-  })
-    .catch((error) => response.status(400).json({error: error.message}))
+    let lastWeekSum = res.values.reduce(function (prev, act) {
+      if (new Date(act.timestamp) < fin)
+        return prev + act.value
+      return prev
+    }, 0)
+    let thisWeekSum = res.values.reduce(function (prev, act) {
+      if (new Date(act.timestamp) > fin)
+        return prev + act.value
+      return prev
+    }, 0)
+    res.values = res.values.filter(function (element) {
+      return (new Date(element.timestamp) < fin)
+    }, 0)
+    res.lastWeekSum = lastWeekSum
+    res.thisWeekSum = thisWeekSum
+    request.user.lastWeekSum = lastWeekSum
+    request.user.thisWeekSum = thisWeekSum
+    return request.user.save().then(() => response.json(res))
+  }).catch((error) => response.status(400).json({error: error.message}))
 }
 
 exports.putFakeData = function (request, response) {
@@ -119,8 +135,8 @@ exports.putFakeData = function (request, response) {
   date.setDate(date.getDate() - date.getDay() - 7)
   date.setHours(0, (Math.random() * 60) | 0, (Math.random() * 60) | 0, 0)
   let inicio = new Date(date)
-  let fin = new Date()
-  fin.setDate(fin.getDate() + 7)
+  let fin = new Date(date)
+  fin.setDate(fin.getDate() + 6)
   // curl -i -X PUT https://api-m2x.att.com/v2/devices/185321322901cff675347d54ffb37f59/streams/average-steps/value -H "X-M2X-KEY: 13ef514ad4d0fa5ed0c90180f607e251" -H "Content-Type: application/json" -d "{ \"value\": \"40\" }"
   let pathname = url.parse(process.env.M2X_STEPS_VIRTUAL_SENSOR)
   let body = {values: []}
@@ -130,7 +146,7 @@ exports.putFakeData = function (request, response) {
   }
   console.log(body)
   let m2x = new Promise(function (resolve, reject) {
-    let query = querystring.stringify({start: inicio.toISOString(), end: fin.toISOString(), type: 'sum', interval: 60 * 60 * 24})
+    let query = querystring.stringify({start: inicio.toISOString(), end: (new Date()).toISOString(), type: 'sum', interval: 60 * 60 * 24})
     let options = {
       hostname: pathname.hostname,
       path: path.resolve(pathname.path, `../../kid-${request.user.id}/values`),

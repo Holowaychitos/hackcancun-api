@@ -99,3 +99,5 @@ exports.updateUser = function (request, response) {
     .then((poll) => response.json({success: true, user: poll}))
     .catch((error) => response.status(400).json({error: error}))
 }
+
+exports.getRank = function (request, response) {}
